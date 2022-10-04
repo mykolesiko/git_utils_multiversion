@@ -261,8 +261,10 @@ def plot_roc_bootstrap(X, y, pos_label = 1,
                        objective=_DEFAULT_OBJECTIVE,
                        auto_flip=True,
                        n_bootstrap=100,
+                       n_samples = None,
                        random_state=None,
                        stratified=False,
+                       weights = None, 
                        show_boots=False,
                        title=None,
                        ax=None,
@@ -277,6 +279,8 @@ def plot_roc_bootstrap(X, y, pos_label = 1,
     specifying the particular objective function to be used to plot the
     optimal point. See get_objective() for details. Default choice is the
     "minopt" objective.
+    weights         the dictionary where key is label and value is fraction of 
+                        label in sample. Default: None    
     """
     import matplotlib.pyplot as plt
     if ax is None:
@@ -288,17 +292,19 @@ def plot_roc_bootstrap(X, y, pos_label = 1,
                                  objective=objective,
                                  auto_flip=auto_flip,
                                  n_bootstrap=n_bootstrap,
+                                 n_samples = n_samples, 
                                  random_state=random_state,
                                  stratified=stratified,
+                                 weights = weights,
                                  return_mean=False,
                                  multi = multi,
                                  num_classes_or_labels  = num_classes_or_labels )
+    #print(len(rocs))                                 
     # 2) Plot the average ROC curve.
     ret_mean = plot_mean_roc(rocs=rocs, auto_flip=auto_flip,
                              show_all=False, ax=ax, multi = multi, **kwargs)
 
     title = "ROC curve" if title is None else title
     ax.get_figure().suptitle(title)
-    ax.set_title("Bootstrap reps: %d, sample size: %d" %
-                 (n_bootstrap, len(y)), fontsize=10)
+    ax.set_title(f"Bootstrap reps: {n_bootstrap}, sample size: {n_samples}  stratified = {stratified}, weights = {weights}" ,  fontsize=10)
     return ret_mean

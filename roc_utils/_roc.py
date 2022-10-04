@@ -512,8 +512,10 @@ def compute_roc_bootstrap(X, y, pos_label = 1,
                           objective=_DEFAULT_OBJECTIVE,
                           auto_flip=False,
                           n_bootstrap=100,
+                          n_samples = None,
                           random_state=None,
                           stratified=False,
+                          weights = None,
                           return_mean=True,
                           multi = None, # or "Labels", "Classes"
                           num_classes_or_labels = None):
@@ -529,8 +531,8 @@ def compute_roc_bootstrap(X, y, pos_label = 1,
         random_state:   None, integer or np.random.RandomState
         stratified:     Perform stratified sampling, which takes into account
                         the relative frequency of the labels. This ensures that
-                        the samples always will have the same number of
-                        positive and negative samples. Enable stratification
+                        the samples always will have the same ratio of
+                        positive and negative samples as in "y". Enable stratification
                         if the dataset is very imbalanced or small, such that
                         degenerate samples (with only positives or negatives)
                         will become more likely. Disabling this flag results
@@ -539,6 +541,8 @@ def compute_roc_bootstrap(X, y, pos_label = 1,
                         variation if the total number of positive and negative
                         samples varies, reducing the "jaggedness" of the
                         average curve. Default: False.
+        weights         the dictionary where key is label and value is fraction of 
+                        label in sample. Default: None               
         return_mean:    Return only the aggregate ROC-curve instead of a list
                         of n_bootstrap ROC items.
     Returns:
@@ -551,20 +555,25 @@ def compute_roc_bootstrap(X, y, pos_label = 1,
     y = np.asarray(y)
     # n = len(X)
     k = len(np.unique(y))
+    #print(k)
     if not isinstance(random_state, np.random.RandomState):
         random_state = np.random.RandomState(random_state)
     results = []
 
     # Collect the data. About bootstrapping:
     # https://datascience.stackexchange.com/questions/14369/
+    #print(n_samples)
     for _ in range(n_bootstrap):
         #print(f"in cycle {n_bootstrap}")
-        x_boot, y_boot = resample_data(X, y,
+        x_boot, y_boot = resample_data(X, y, 
+                                       n_samples = n_samples,
                                        replace=True,
+                                       weights = weights, 
                                        stratify=y if stratified else None,
                                        random_state=random_state)
-
+        #print(y_boot)
         if len(np.unique(y_boot)) < k:
+            #print(f"in cycle {n_bootstrap}")
             # Test for a (hopefully) rare enough situation.
             msg = ("Not all classes are represented in current bootstrap "
                    "sample. Skipping it. If this problem occurs too often, "
@@ -594,6 +603,7 @@ def compute_roc_bootstrap(X, y, pos_label = 1,
                                     objective=objective,
                                     multi = multi)
         return mean_roc
+    #print(len(results))    
     return results
 
 

@@ -14,6 +14,8 @@ def resample_data(*arrays, **kwargs):
                         an int or np.random.RandomState. Default: None
         stratify:       An iterable containing the class labels by which the
                         the arrays should be stratified. Default: None
+        weights:        the dictionary where key is label and value is fraction of 
+                        label in all samples. Default: None                        
         axis:           Sampling axis. Note: axis!=0 is slow! Also, stratify
                         is currently not supported if axis!=0. Default: axis=0
         squeeze:        Flatten the output array if only one array is provided.
@@ -52,6 +54,7 @@ def resample_data(*arrays, **kwargs):
     frac = kwargs.pop("frac", None)
     rng = kwargs.pop("random_state", None)
     stratify = kwargs.pop("stratify", None)
+    weights = kwargs.pop("weights", None)
     squeeze = kwargs.pop("squeeze", True)
     axis = kwargs.pop("axis", 0)
     if kwargs:
@@ -66,6 +69,7 @@ def resample_data(*arrays, **kwargs):
         n_samples = int(np.round(frac * lens[0]))
     #n_samples = 100
     #print(n_samples)
+    n_global = lens[0]
     if n_samples is None:
         n_samples = lens[0]
     if axis > 0 or not has_sklearn:
@@ -75,11 +79,24 @@ def resample_data(*arrays, **kwargs):
         #print("stratify")
         #print(n_samples)
         #n_samples = 100
+        if weights != None:
+            if stratify != None:
+                msg = "stratify and weight params couldn't be determined simulteniously. "
+                raise ValueError(msg)
+            else:
+                # form the stratify array from known balance of classes
+                stratify = []
+                for key in weights.keys():
+                    stratify.extend([key] * int(weights[key] * n_global))  
+        #print(n_samples)
+        #print(stratify)             
+        #print(arrays)
         ret = resample(*arrays,
                        replace=replace,
                        n_samples=n_samples,
                        stratify=stratify,
                        random_state=rng,)
+        #print(ret)                       
     # Undo the squeezing, which is done by resample (and _resample).
     if not squeeze and len(arrays) == 1:
         ret = [ret]
