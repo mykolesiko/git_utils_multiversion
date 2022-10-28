@@ -10,6 +10,7 @@ MANIFEST
 
 # Output of tox
 .tox/
+venv
 
 #
 .ipynb*
